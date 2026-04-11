@@ -5,10 +5,12 @@ const port = process.env.PORT || 3000;
 
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 
 app.use(express.json());
-app.use("/", authRoutes);
-app.use("/", eventRoutes);
+app.use("/auth", authRoutes);
+app.use("/events", eventRoutes);
+app.use("/", bookingRoutes);
 
 app.get("/", (req, res) => {
   res.send("Event API");

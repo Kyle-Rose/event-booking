@@ -24,4 +24,54 @@ const getEvents = async (req, res) => {
 
 };
 
-module.exports = { createEvent, getEvents };
+const getEventById = async (req, res) => {
+    const eventId = req.params.id;
+
+    const result = await db.query(
+        "SELECT * FROM event_app.events WHERE id = $1",
+        [eventId]
+    );
+
+    if (result.rows.length === 0) {
+        return res.status(404).json({
+        message: "Event not found"
+        });
+    }
+
+    return res.status(200).json({
+        event: result.rows[0]
+    });
+};
+
+const deleteEvent = async (req, res) => {
+    const eventId = req.params.id;
+    const userId = req.user.id;
+
+    const event = await db.query(
+        "SELECT * FROM events WHERE id = $1",
+        [eventId]
+    );
+
+    if (event.rows.length === 0) {
+        return res.status(404).json({
+        message: "Event not found"
+        });
+    }
+
+    if (event.rows[0].creator_id !== userId) {
+        return res.status(403).json({
+        message: "Not authorized to delete this event"
+        });
+    }
+
+    await db.query(
+        "DELETE FROM events WHERE id = $1",
+        [eventId]
+    );
+
+    return res.status(200).json({
+        message: "Event deleted"
+    });
+};
+
+module.exports = { createEvent, getEvents, getEventById, deleteEvent };
