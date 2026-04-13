@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Event App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>Event Booking App</h1>
+
+  <!-- CREATE EVENT -->
+  <div id="create-event">
+    <h2>Create Event</h2>
+    <input id="title" placeholder="Title" />
+    <input id="event_date" type="date" />
+    <input id="location" placeholder="Location" />
+    <input id="max_capacity" type="number" placeholder="Capacity" />
+    <input id="description" placeholder="Description" />       
+    <button onclick="createNewEvent()">Create Event</button>
+  </div>
+
+  <!-- EVENTS LIST -->
+  <h2>Events</h2>
+  <div id="events"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

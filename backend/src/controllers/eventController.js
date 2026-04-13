@@ -48,7 +48,7 @@ const deleteEvent = async (req, res) => {
     const userId = req.user.id;
 
     const event = await db.query(
-        "SELECT * FROM events WHERE id = $1",
+        "SELECT * FROM event_app.events WHERE id = $1",
         [eventId]
     );
 
@@ -65,7 +65,7 @@ const deleteEvent = async (req, res) => {
     }
 
     await db.query(
-        "DELETE FROM events WHERE id = $1",
+        "DELETE FROM event_app.events WHERE id = $1",
         [eventId]
     );
 
