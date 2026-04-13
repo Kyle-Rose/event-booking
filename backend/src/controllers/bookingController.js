@@ -55,10 +55,16 @@ const getMyBookings = async (req, res) => {
     const userId = req.user.id;
 
     const result = await db.query(
-        `SELECT bookings.id, events.title, events.event_date, events.location, events.description
-        FROM event_app.bookings
-        JOIN event_app.events ON bookings.event_id = events.id
-        WHERE bookings.user_id = $1`,
+        `SELECT 
+  events.id AS event_id,
+  events.title,
+  events.event_date,
+  events.location,
+  events.description
+FROM event_app.bookings
+JOIN event_app.events
+ON bookings.event_id = events.id
+WHERE bookings.user_id = $1;`,
         [userId]
     );
 
