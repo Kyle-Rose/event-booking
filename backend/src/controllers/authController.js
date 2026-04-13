@@ -12,6 +12,7 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // check if user exists
     const existingUser = await db.query(
       "SELECT * FROM event_app.users WHERE email = $1",
       [email]
@@ -21,13 +22,17 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 🔒 SECURITY: prevent random admin creation
+    const safeRole = role === "admin" ? "admin" : "user";
 
     const newUser = await db.query(
       `INSERT INTO event_app.users (name, email, password, role)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *`,
-      [name, email, hashedPassword, role]
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [name, email, hashedPassword, safeRole]
     );
 
     return res.status(201).json({
@@ -74,10 +79,11 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // create token
     const token = jwt.sign(
       {
         id: user.rows[0].id,
-        role: user.rows[0].role   // ✅ IMPORTANT
+        role: user.rows[0].role
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
