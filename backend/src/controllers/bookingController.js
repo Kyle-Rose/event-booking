@@ -56,6 +56,7 @@ const getMyBookings = async (req, res) => {
 
     const result = await db.query(
         `SELECT 
+  bookings.id AS booking_id,
   events.id AS event_id,
   events.title,
   events.event_date,
