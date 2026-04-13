@@ -2,9 +2,11 @@ const db = require("../db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+
+// ---------------- REGISTER ----------------
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -22,24 +24,30 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await db.query(
-      "INSERT INTO event_app.users (name, email, password) VALUES ($1, $2, $3) RETURNING *",
-      [name, email, hashedPassword]
-
+      `INSERT INTO event_app.users (name, email, password, role)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *`,
+      [name, email, hashedPassword, role]
     );
-
-    console.log(newUser.rows[0]);
 
     return res.status(201).json({
       message: "User registered successfully",
-      user: newUser.rows[0]
+      user: {
+        id: newUser.rows[0].id,
+        name: newUser.rows[0].name,
+        email: newUser.rows[0].email,
+        role: newUser.rows[0].role
+      }
     });
+
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-// LOGIN
+
+// ---------------- LOGIN ----------------
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -67,18 +75,34 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.rows[0].id },
+      {
+        id: user.rows[0].id,
+        role: user.rows[0].role   // ✅ IMPORTANT
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
     return res.status(200).json({
       message: "Login successful",
-      token
+      token,
+      user: {
+        id: user.rows[0].id,
+        name: user.rows[0].name,
+        email: user.rows[0].email,
+        role: user.rows[0].role
+      }
     });
+
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-module.exports = { register, login };
+
+// ---------------- EXPORT ----------------
+module.exports = {
+  register,
+  login
+};

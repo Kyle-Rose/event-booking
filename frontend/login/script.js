@@ -42,6 +42,7 @@ async function loginAsAdmin() {
 
   if (data.token) {
     localStorage.setItem("token", data.token);
+    alert("Admin login successful");
     window.location.href = "../admin/index.html";                
   } else {
     alert("Login failed");
