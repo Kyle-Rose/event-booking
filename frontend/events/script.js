@@ -29,7 +29,7 @@ async function loadEvents() {
       <h3>${event.title}</h3>
       <p><strong>Date:</strong> ${new Date(event.event_date).toLocaleDateString()}</p>
       <p><strong>Location:</strong> ${event.location}</p>
-      <p>${event.description || ""}</p>
+      <p><strong>Description:</strong> ${event.description || ""}</p>
       <button onclick="bookEvent(${event.id})">Book</button>
     `;
 
@@ -87,8 +87,9 @@ async function loadBookings() {
 
     div.innerHTML = `
       <h3>${b.title}</h3>
-      <p><strong>Date:</strong> ${new Date(b.date).toLocaleDateString()}</p>
+      <p><strong>Date:</strong> ${new Date(b.event_date).toLocaleDateString()}</p>
       <p><strong>Location:</strong> ${b.location}</p>
+      <p><strong>Description:</strong> ${b.description || ""}</p>
     `;
 
     bookingsDiv.appendChild(div);
