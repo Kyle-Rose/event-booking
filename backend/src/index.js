@@ -7,14 +7,10 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
-
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-const frontendPath = path.resolve(process.cwd(), "frontend");
+const frontendPath = path.join(__dirname, "..", "..", "frontend");
 
 app.use(express.static(frontendPath));
 
@@ -27,7 +23,7 @@ app.use("/events", eventRoutes);
 app.use("/bookings", bookingRoutes);
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(frontendPath, "login", "index.html"));
+  res.redirect("/login/index.html");
 });
 
 app.listen(PORT, () => {
