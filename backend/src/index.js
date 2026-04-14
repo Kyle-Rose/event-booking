@@ -8,7 +8,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
-
 app.use(cors({
   origin: true,
   credentials: true
@@ -16,21 +15,20 @@ app.use(cors({
 
 app.use(express.json());
 
+const frontendPath = path.join(__dirname, "..", "..", "frontend");
+
+app.use(express.static(frontendPath));
 
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 
-
 app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
 app.use("/bookings", bookingRoutes);
 
-app.use(express.static(path.join(__dirname, "..", "frontend")));
-
-
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "frontend", "login", "index.html"));x
+  res.redirect("/login/index.html");
 });
 
 app.listen(PORT, () => {
