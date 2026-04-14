@@ -5,14 +5,10 @@ const path = require("path");
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors());
 app.use(express.json());
-
-const frontendPath = path.join(__dirname, "..", "..", "frontend");
-
-app.use(express.static(frontendPath));
 
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
@@ -20,12 +16,16 @@ const bookingRoutes = require("./routes/bookingRoutes");
 
 app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
-app.use("/bookings", bookingRoutes);
+app.use("/", bookingRoutes);
+
+const frontendPath = path.join(__dirname, "..", "..", "frontend");
+
+app.use(express.static(frontendPath));
 
 app.get("/", (req, res) => {
   res.redirect("/login/index.html");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
