@@ -17,10 +17,14 @@ app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
 app.use("/", bookingRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Event API");
-});
+const path = require("path");
 
+// serve entire frontend folder
+app.use(express.static(path.join(__dirname, "../../frontend")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../frontend/login/index.html"));
+});
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
