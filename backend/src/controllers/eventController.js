@@ -74,4 +74,30 @@ const deleteEvent = async (req, res) => {
     });
 };
 
-module.exports = { createEvent, getEvents, getEventById, deleteEvent };
+const editEvent = async (req, res) => {
+    const eventId = req.params.id;
+    const { title, event_date, location, max_capacity, description } = req.body;
+
+    const event = await db.query(
+        "SELECT * FROM event_app.events WHERE id = $1",
+        [eventId]
+    );
+
+    if (event.rows.length === 0) {
+        return res.status(404).json({
+            message: "Event not found"
+        });
+    }
+
+    const updatedEvent = await db.query(
+        "UPDATE event_app.events SET title = $1, event_date = $2, location = $3, max_capacity = $4, description = $5 WHERE id = $6 RETURNING *",
+        [title, event_date, location, max_capacity, description, eventId]
+    );
+
+    return res.status(200).json({
+        message: "Event updated successfully",
+        event: updatedEvent.rows[0]
+    });
+};
+
+module.exports = { createEvent, getEvents, getEventById, deleteEvent, editEvent };

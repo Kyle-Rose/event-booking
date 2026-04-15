@@ -10,13 +10,16 @@
 
   <!-- CREATE EVENT -->
   <div id="create-event">
-    <h2>Create Event</h2>
+    <h1>Create Event</h1>
     <input id="title" placeholder="Title" />
     <input id="event_date" type="date" />
     <input id="location" placeholder="Location" />
     <input id="max_capacity" type="number" placeholder="Capacity" />
     <input id="description" placeholder="Description" />       
     <button onclick="createNewEvent()">Create Event</button>
+    <button id="cancelEditBtn" onclick="cancelEdit()" style="display:none;">
+  Cancel Edit
+</button>
   </div>
 
   <!-- EVENTS LIST -->

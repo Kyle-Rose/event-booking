@@ -1,5 +1,7 @@
 const API = "";
 
+let editingEventId = null;
+
 function init() {
   loadEvents();
 }
@@ -37,16 +39,38 @@ async function loadEvents() {
         <p><strong>Description:</strong> ${event.description || ""}</p>
       `;
 
-      // ---------------- DELETE BUTTON (FIXED) ----------------
-      const btn = document.createElement("button");
-      btn.textContent = "Delete";
+      // DELETE BUTTON
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
 
-      btn.addEventListener("click", () => {
-        console.log("DELETE CLICKED ID:", event.id);
+      deleteBtn.addEventListener("click", () => {
         deleteEvent(event.id);
       });
 
-      div.appendChild(btn);
+      // EDIT BUTTON
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+
+      editBtn.addEventListener("click", () => {
+        // Fill form
+        document.getElementById("title").value = event.title;
+        document.getElementById("event_date").value = event.event_date.split("T")[0];
+        document.getElementById("location").value = event.location;
+        document.getElementById("max_capacity").value = event.max_capacity;
+        document.getElementById("description").value = event.description || "";
+
+        // Set edit mode
+        editingEventId = event.id;
+
+        // Update button text
+        document.querySelector("#create-event button").textContent = "Update Event";
+
+        // Show cancel button
+        document.getElementById("cancelEditBtn").style.display = "block";
+      });
+
+      div.appendChild(deleteBtn);
+      div.appendChild(editBtn);
       eventsDiv.appendChild(div);
     });
 
@@ -56,7 +80,7 @@ async function loadEvents() {
 }
 
 
-// ---------------- CREATE EVENT ----------------
+// ---------------- CREATE / UPDATE EVENT ----------------
 
 async function createNewEvent() {
   const token = localStorage.getItem("token");
@@ -77,9 +101,17 @@ async function createNewEvent() {
     return;
   }
 
+  const isEditing = editingEventId !== null;
+
+  const url = isEditing
+    ? `${API}/events/${editingEventId}`
+    : `${API}/events`;
+
+  const method = isEditing ? "PUT" : "POST";
+
   try {
-    const res = await fetch(`${API}/events`, {
-      method: "POST",
+    const res = await fetch(url, {
+      method,
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
@@ -96,32 +128,48 @@ async function createNewEvent() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Failed to create event");
+      alert(data.message || "Request failed");
       return;
     }
 
-    alert("Event created successfully!");
+    alert(isEditing ? "Event updated!" : "Event created!");
 
-    // clear form
-    document.getElementById("title").value = "";
-    document.getElementById("event_date").value = "";
-    document.getElementById("location").value = "";
-    document.getElementById("max_capacity").value = "";
-    document.getElementById("description").value = "";
-
+    resetForm();
     loadEvents();
 
   } catch (err) {
-    console.error("Create failed:", err);
+    console.error("Request failed:", err);
   }
+}
+
+
+// ---------------- CANCEL EDIT ----------------
+
+function cancelEdit() {
+  resetForm();
+}
+
+
+// ---------------- RESET FORM ----------------
+
+function resetForm() {
+  document.getElementById("title").value = "";
+  document.getElementById("event_date").value = "";
+  document.getElementById("location").value = "";
+  document.getElementById("max_capacity").value = "";
+  document.getElementById("description").value = "";
+
+  editingEventId = null;
+
+  document.querySelector("#create-event button").textContent = "Create Event";
+
+  document.getElementById("cancelEditBtn").style.display = "none";
 }
 
 
 // ---------------- DELETE EVENT ----------------
 
 async function deleteEvent(id) {
-  console.log("DELETE FUNCTION CALLED WITH:", id);
-
   if (!id) {
     alert("Invalid event ID");
     return;
