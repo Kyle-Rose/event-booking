@@ -4,6 +4,7 @@ let editingEventId = null;
 
 function init() {
   loadEvents();
+  getBookings();
 }
 
 init();
@@ -76,6 +77,51 @@ async function loadEvents() {
 
   } catch (err) {
     console.error("Failed to load events:", err);
+  }
+}
+
+async function getBookings() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API}/bookings`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    console.log("EVENT BOOKINGS RESPONSE:", data);
+
+    const bookingsDiv = document.getElementById("bookings");
+    bookingsDiv.innerHTML = "";
+
+    const bookings = data.bookings || [];
+
+    if (bookings.length === 0) {
+      bookingsDiv.textContent = "No bookings found for this event.";
+      return;
+    }
+
+    bookings.forEach(b => {
+      const div = document.createElement("div");
+      div.className = "booking-card";
+
+      div.innerHTML = `
+        <p><strong>Booking ID:</strong> ${b.booking_id}</p>
+        <p><strong>User ID:</strong> ${b.user_id}</p>
+        <p><strong>Event ID:</strong> ${b.event_id}</p>
+        <p><strong>User Name:</strong> ${b.user_name}</p>
+        <p><strong>Event Name:</strong> ${b.event_name}</p>
+      `;
+
+      bookingsDiv.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("Failed to load event bookings:", err);
   }
 }
 

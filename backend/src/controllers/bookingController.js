@@ -100,8 +100,29 @@ const cancelBooking = async (req, res) => {
     });
 };
 
+const getEventBookings = async (req, res) => { 
+    const bookings = await db.query(`
+SELECT 
+  b.id AS booking_id,
+  b.user_id,
+  b.event_id,
+  u.name AS user_name,
+  e.title AS event_name
+FROM event_app.bookings b
+JOIN event_app.users u ON b.user_id = u.id
+JOIN event_app.events e ON b.event_id = e.id;
+`
+    );
+
+    return res.status(200).json({
+        bookings: bookings.rows
+    });
+};
+
+
 module.exports = {
     bookEvent,
     getMyBookings,
-    cancelBooking
+    cancelBooking,
+    getEventBookings
 };
