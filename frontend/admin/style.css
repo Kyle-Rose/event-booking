@@ -86,3 +86,33 @@ button:hover {
   margin: 4px 0;
   font-size: 14px;
 }
+
+#bookings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 300px));
+  justify-content: center; /* centers the cards horizontally */
+  gap: 16px;
+  padding: 20px;
+}
+
+.booking-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.booking-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+.booking-card h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.booking-card p {
+  margin: 4px 0;
+  font-size: 14px;
+}

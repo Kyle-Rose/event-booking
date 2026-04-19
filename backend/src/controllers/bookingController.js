@@ -75,29 +75,45 @@ WHERE bookings.user_id = $1;`,
 };
 
 const cancelBooking = async (req, res) => {
-    const bookingId = req.params.id;
-    const userId = req.user.id;
-
-    // 1. check booking exists and belongs to user
-    const booking = await db.query(
-        "SELECT * FROM event_app.bookings WHERE id = $1 AND user_id = $2",
-        [bookingId, userId]
-    );
-
-    if (booking.rows.length === 0) {
-        return res.status(404).json({
-        message: "Booking not found"
-        });
+    if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
-    await db.query(
-        "DELETE FROM event_app.bookings WHERE id = $1",
-        [bookingId]
-    );
+    try {
+        const bookingId = req.params.id;
 
-    return res.status(200).json({
-        message: "Booking cancelled"
-    });
+        // 1. Get booking WITHOUT filtering user first
+        const booking = await db.query(
+            "SELECT * FROM event_app.bookings WHERE id = $1",
+            [bookingId]
+        );
+
+        if (booking.rows.length === 0) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        const foundBooking = booking.rows[0];
+
+        // 2. Permission check
+        const isOwner = foundBooking.user_id === req.user.id;
+        const isAdmin = req.user.role === "admin";
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        // 3. Delete booking
+        await db.query(
+            "DELETE FROM event_app.bookings WHERE id = $1",
+            [bookingId]
+        );
+
+        return res.status(200).json({ message: "Booking cancelled" });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Server error" });
+    }
 };
 
 const getEventBookings = async (req, res) => { 
