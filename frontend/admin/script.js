@@ -10,14 +10,12 @@ function init() {
 init();
 
 
-// ---------------- LOAD EVENTS ----------------
+// ===================== EVENTS =====================
 
 async function loadEvents() {
   try {
     const res = await fetch(`${API}/events`);
     const data = await res.json();
-
-    console.log("EVENTS RESPONSE:", data);
 
     const events = data.events || data;
 
@@ -25,10 +23,7 @@ async function loadEvents() {
     eventsDiv.innerHTML = "";
 
     events.forEach(event => {
-      if (!event || !event.id) {
-        console.warn("Skipping invalid event:", event);
-        return;
-      }
+      if (!event || !event.id) return;
 
       const div = document.createElement("div");
       div.className = "event-card";
@@ -40,38 +35,27 @@ async function loadEvents() {
         <p><strong>Description:</strong> ${event.description || ""}</p>
       `;
 
-      // DELETE BUTTON
       const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "Delete";
+      deleteBtn.textContent = "Delete Event";
+      deleteBtn.onclick = () => deleteEvent(event.id);
 
-      deleteBtn.addEventListener("click", () => {
-        deleteEvent(event.id);
-      });
-
-      // EDIT BUTTON
       const editBtn = document.createElement("button");
       editBtn.textContent = "Edit";
-
-      editBtn.addEventListener("click", () => {
-        // Fill form
+      editBtn.onclick = () => {
         document.getElementById("title").value = event.title;
         document.getElementById("event_date").value = event.event_date.split("T")[0];
         document.getElementById("location").value = event.location;
         document.getElementById("max_capacity").value = event.max_capacity;
         document.getElementById("description").value = event.description || "";
 
-        // Set edit mode
         editingEventId = event.id;
-
-        // Update button text
         document.querySelector("#create-event button").textContent = "Update Event";
-
-        // Show cancel button
         document.getElementById("cancelEditBtn").style.display = "block";
-      });
+      };
 
       div.appendChild(deleteBtn);
       div.appendChild(editBtn);
+
       eventsDiv.appendChild(div);
     });
 
@@ -79,6 +63,9 @@ async function loadEvents() {
     console.error("Failed to load events:", err);
   }
 }
+
+
+// ===================== BOOKINGS =====================
 
 async function getBookings() {
   const token = localStorage.getItem("token");
@@ -93,48 +80,60 @@ async function getBookings() {
 
     const data = await res.json();
 
-    console.log("EVENT BOOKINGS RESPONSE:", data);
-
     const bookingsDiv = document.getElementById("bookings");
     bookingsDiv.innerHTML = "";
 
     const bookings = data.bookings || [];
 
     if (bookings.length === 0) {
-      bookingsDiv.textContent = "No bookings found for this event.";
+      bookingsDiv.textContent = "No bookings found.";
       return;
     }
 
     bookings.forEach(b => {
-      const div = document.createElement("div");
-      div.className = "booking-card";
+      const card = document.createElement("div");
+      card.className = "booking-card";
 
-      div.innerHTML = `
+      card.innerHTML = `
+        <h3>${b.event_name}</h3>
+        <p><strong>User:</strong> ${b.user_name}</p>
         <p><strong>Booking ID:</strong> ${b.booking_id}</p>
         <p><strong>User ID:</strong> ${b.user_id}</p>
         <p><strong>Event ID:</strong> ${b.event_id}</p>
-        <p><strong>User Name:</strong> ${b.user_name}</p>
-        <p><strong>Event Name:</strong> ${b.event_name}</p>
       `;
 
-      bookingsDiv.appendChild(div);
+      // ===================== SAFE DELETE BUTTON =====================
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete Booking";
+      deleteBtn.style.background = "red";
+      deleteBtn.style.color = "white";
+
+      deleteBtn.onclick = () => {
+        // 🔥 SAFETY CHECK (prevents your error)
+        if (!b || !b.booking_id) {
+          console.error("Invalid booking object:", b);
+          alert("Cannot delete booking: missing ID");
+          return;
+        }
+
+        deleteBooking(b.booking_id);
+      };
+
+      card.appendChild(deleteBtn);
+      bookingsDiv.appendChild(card);
     });
 
   } catch (err) {
-    console.error("Failed to load event bookings:", err);
+    console.error("Failed to load bookings:", err);
   }
 }
 
 
-// ---------------- CREATE / UPDATE EVENT ----------------
+// ===================== CREATE / UPDATE EVENT =====================
 
 async function createNewEvent() {
   const token = localStorage.getItem("token");
-
-  if (!token) {
-    alert("Please login first");
-    return;
-  }
+  if (!token) return alert("Please login first");
 
   const title = document.getElementById("title").value;
   const event_date = document.getElementById("event_date").value;
@@ -142,25 +141,18 @@ async function createNewEvent() {
   const max_capacity = document.getElementById("max_capacity").value;
   const description = document.getElementById("description").value;
 
-  if (!title || !event_date || !location || !max_capacity) {
-    alert("Please fill all required fields");
-    return;
-  }
-
-  const isEditing = editingEventId !== null;
-
-  const url = isEditing
+  const url = editingEventId
     ? `${API}/events/${editingEventId}`
     : `${API}/events`;
 
-  const method = isEditing ? "PUT" : "POST";
+  const method = editingEventId ? "PUT" : "POST";
 
   try {
     const res = await fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({
         title,
@@ -174,29 +166,84 @@ async function createNewEvent() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Request failed");
-      return;
+      return alert(data.message || "Error");
     }
 
-    alert(isEditing ? "Event updated!" : "Event created!");
+    alert(editingEventId ? "Event updated!" : "Event created!");
 
     resetForm();
     loadEvents();
 
   } catch (err) {
-    console.error("Request failed:", err);
+    console.error(err);
   }
 }
 
 
-// ---------------- CANCEL EDIT ----------------
+// ===================== DELETE EVENT =====================
+
+async function deleteEvent(id) {
+  const token = localStorage.getItem("token");
+
+  if (!confirm("Delete this event?")) return;
+
+  try {
+    await fetch(`${API}/events/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    loadEvents();
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+
+// ===================== DELETE BOOKING =====================
+
+async function deleteBooking(id) {
+  const token = localStorage.getItem("token");
+
+  if (!id) {
+    console.error("deleteBooking called with invalid id:", id);
+    alert("Invalid booking ID");
+    return;
+  }
+
+  if (!confirm("Delete this booking?")) return;
+
+  try {
+    const res = await fetch(`${API}/bookings/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return alert(data.message || "Failed to delete booking");
+    }
+
+    alert("Booking deleted");
+    getBookings();
+
+  } catch (err) {
+    console.error("Delete booking error:", err);
+  }
+}
+
+
+// ===================== FORM HELPERS =====================
 
 function cancelEdit() {
   resetForm();
 }
-
-
-// ---------------- RESET FORM ----------------
 
 function resetForm() {
   document.getElementById("title").value = "";
@@ -208,58 +255,5 @@ function resetForm() {
   editingEventId = null;
 
   document.querySelector("#create-event button").textContent = "Create Event";
-
   document.getElementById("cancelEditBtn").style.display = "none";
-}
-
-
-// ---------------- DELETE EVENT ----------------
-
-async function deleteEvent(id) {
-  if (!id) {
-    alert("Invalid event ID");
-    return;
-  }
-
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    alert("Please login first");
-    return;
-  }
-
-  if (!confirm("Are you sure you want to delete this event?")) {
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API}/events/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
-
-    let data;
-
-    try {
-      data = await res.json();
-    } catch {
-      const text = await res.text();
-      console.error("Non-JSON response:", text);
-      alert("Server error");
-      return;
-    }
-
-    if (!res.ok) {
-      alert(data.message || "Failed to delete event");
-      return;
-    }
-
-    alert("Event deleted successfully!");
-    loadEvents();
-
-  } catch (err) {
-    console.error("Delete failed:", err);
-  }
 }
