@@ -47,4 +47,4 @@ PostgreSQL
 
 Deployment:
 
-Render
+Neon, Render
